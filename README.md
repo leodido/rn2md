@@ -2,6 +2,12 @@
 
 > Generate markdown for your changelogs from release-note blocks
 
+It expects release-note block rows to follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format.
+
+Then, it extracts the `type` and creates different sections in the resulting markdown for different `type`s.
+
+For example `new: ...` and `BREAKING CHANGE: ...` release-note rows populate the "Major Changes" section of the markdown.
+
 ## Usage
 
 ```bash
@@ -24,3 +30,7 @@ Flags:
   -o, --org string         the github organization
   -r, --repo string        the github repository name
 ```
+
+## TODO
+
+- [ ] gen markdown table for statistics

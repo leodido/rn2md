@@ -12,8 +12,8 @@ var opts = NewOptions()
 
 var program = &cobra.Command{
 	Use:   "rn2md",
-	Long:  "...",
-	Short: "Obtain a changelog markdown from release-note blocks",
+	Long:  "Little configurable CLI to generate the markdown for your changelos from release-note blocks found into your project pull requests.",
+	Short: "Generate markdown for your changelogs from release-note blocks.",
 	PersistentPreRun: func(c *cobra.Command, args []string) {
 		if c.Name() != "help" {
 			if errs := opts.Validate(); errs != nil {
@@ -43,10 +43,10 @@ func init() {
 
 	// Setup flags before the command is initialized
 	flags := program.PersistentFlags()
-	flags.StringVarP(&opts.Milestone, "milestone", "m", opts.Milestone, "...")
-	flags.StringVarP(&opts.Org, "org", "o", opts.Org, "...")
-	flags.StringVarP(&opts.Repo, "repo", "r", opts.Repo, "...")
-	flags.StringVarP(&opts.Branch, "branch", "b", opts.Branch, "...")
+	flags.StringVarP(&opts.Milestone, "milestone", "m", opts.Milestone, "the milestone you want to filter by the pull requests")
+	flags.StringVarP(&opts.Org, "org", "o", opts.Org, "the github organization")
+	flags.StringVarP(&opts.Repo, "repo", "r", opts.Repo, "the github repository name")
+	flags.StringVarP(&opts.Branch, "branch", "b", opts.Branch, "the target branch you want to filter by the pull requests")
 }
 
 func initConfig() {

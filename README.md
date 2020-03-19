@@ -10,8 +10,8 @@ rn2md -o falcosecurity -m 0.21.0 -r falco
 
 ## Help
 
-```bash
-./rn2md --help                                                                                             2.89 
+```
+./rn2md --help
 Little configurable CLI to generate the markdown for your changelos from release-note blocks found into your project pull requests.
 
 Usage:

@@ -82,7 +82,7 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 			n = strings.Trim(n, "\r")
 			matches := typologyRegexp.FindStringSubmatch(n)
 			if len(matches) < 5 {
-				return nil, fmt.Errorf("error extracting type from release note")
+				return nil, fmt.Errorf("error extracting type from release note, pr: %d", p.GetNumber())
 			}
 
 			rn := ReleaseNote{

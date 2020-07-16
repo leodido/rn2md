@@ -4,7 +4,7 @@
 
 It expects release-note block rows to follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format.
 
-Then, it extracts the `type` and creates different sections in the resulting markdown for different `type`s.
+Then, it extracts the `type` and creates different sections in the resulting markdown for different `type`.
 
 For example `new: ...` and `BREAKING CHANGE: ...` release-note rows populate the "Major Changes" section of the markdown.
 
@@ -29,6 +29,7 @@ Flags:
   -m, --milestone string   the milestone you want to filter by the pull requests
   -o, --org string         the github organization
   -r, --repo string        the github repository name
+  -t, --token string       a GitHub personal API token to perform authenticated requests
 ```
 
 ## TODO

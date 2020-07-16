@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v28/github"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -32,9 +33,20 @@ type Client struct {
 }
 
 // NewClient ...
-func NewClient() *Client {
+func NewClient(token string) *Client {
+	client := github.NewClient(nil)
+
+	// Eventually create an authenticated client
+	if token != "" {
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: token},
+		)
+		tc := oauth2.NewClient(context.Background(), ts)
+		client = github.NewClient(tc)
+	}
+
 	return &Client{
-		c: github.NewClient(nil),
+		c: client,
 		s: &statistics{
 			total:     0,
 			totalNone: 0,

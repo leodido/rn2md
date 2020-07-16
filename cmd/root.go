@@ -12,7 +12,7 @@ var opts = NewOptions()
 
 var program = &cobra.Command{
 	Use:   "rn2md",
-	Long:  "Little configurable CLI to generate the markdown for your changelos from release-note blocks found into your project pull requests.",
+	Long:  "Little configurable CLI to generate the markdown for your changelogs from release-note blocks found into your project pull requests.",
 	Short: "Generate markdown for your changelogs from release-note blocks.",
 	PersistentPreRun: func(c *cobra.Command, args []string) {
 		if c.Name() != "help" {

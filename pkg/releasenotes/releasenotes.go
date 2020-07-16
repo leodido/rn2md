@@ -62,6 +62,15 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 
 	releaseNotes := []ReleaseNote{}
 	for _, p := range prs {
+		num := p.GetNumber()
+		isMerged, _, err := c.c.PullRequests.IsMerged(ctx, org, repo, num)
+		if err != nil {
+			return nil, err
+		}
+		if !isMerged {
+			// It means PR has been closed but not merged in
+			continue
+		}
 		if p.GetMilestone().GetTitle() != milestone {
 			continue
 		}
@@ -82,15 +91,15 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 			n = strings.Trim(n, "\r")
 			matches := typologyRegexp.FindStringSubmatch(n)
 			if len(matches) < 5 {
-				return nil, fmt.Errorf("error extracting type from release note, pr: %d", p.GetNumber())
+				return nil, fmt.Errorf("error extracting type from release note, pr: %d", num)
 			}
 
 			rn := ReleaseNote{
 				Typology:    matches[1],
 				Scope:       matches[3],
 				Description: n,
-				URI:         fmt.Sprintf("%s/%s/%s/pull/%d", defaultGitHubBaseURI, org, repo, p.GetNumber()),
-				Num:         p.GetNumber(),
+				URI:         fmt.Sprintf("%s/%s/%s/pull/%d", defaultGitHubBaseURI, org, repo, num),
+				Num:         num,
 			}
 			releaseNotes = append(releaseNotes, rn)
 		}

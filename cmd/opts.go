@@ -15,6 +15,7 @@ type Options struct {
 	Branch    string `default:"master" validate:"omitempty,ascii" name:"branch"`
 	Org       string `validate:"required,ascii" name:"organization"`
 	Repo      string `validate:"required,ascii" name:"repository"`
+	Token     string `validate:"omitempty,len=40" name:"token"`
 }
 
 // NewOptions create a pointer to an Options instance.

@@ -25,7 +25,7 @@ var program = &cobra.Command{
 		}
 	},
 	Run: func(c *cobra.Command, args []string) {
-		client := releasenotes.NewClient()
+		client := releasenotes.NewClient(opts.Token)
 		notes, err := client.Get(opts.Org, opts.Repo, opts.Branch, opts.Milestone)
 		if err != nil {
 			logger.WithError(err).Fatal("error retrieving PRs")
@@ -47,6 +47,7 @@ func init() {
 	flags.StringVarP(&opts.Org, "org", "o", opts.Org, "the github organization")
 	flags.StringVarP(&opts.Repo, "repo", "r", opts.Repo, "the github repository name")
 	flags.StringVarP(&opts.Branch, "branch", "b", opts.Branch, "the target branch you want to filter by the pull requests")
+	flags.StringVarP(&opts.Token, "token", "t", opts.Token, "a GitHub personal API token to perform authenticated requests")
 }
 
 func initConfig() {

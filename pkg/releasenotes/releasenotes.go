@@ -56,6 +56,9 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 		},
 	}
 	prs, _, err := c.c.PullRequests.List(ctx, org, repo, listingOpts)
+	if _, ok := err.(*github.RateLimitError); ok {
+		return nil, fmt.Errorf("hit rate limiting")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -64,8 +67,11 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 	for _, p := range prs {
 		num := p.GetNumber()
 		isMerged, _, err := c.c.PullRequests.IsMerged(ctx, org, repo, num)
+		if _, ok := err.(*github.RateLimitError); ok {
+			return nil, fmt.Errorf("hit rate limiting")
+		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error detecting if pr %d is merged or not", num)
 		}
 		if !isMerged {
 			// It means PR has been closed but not merged in

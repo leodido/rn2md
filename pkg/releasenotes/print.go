@@ -17,7 +17,7 @@ Released on {{ .Day }}
 
 {{ if .MajorNotes }}
 {{ range .MajorNotes }}
-* {{ .Description }} [[#{{ .Num }}]({{ .URI }})]
+* {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
 {{ end }}
 {{ end }}
 
@@ -25,7 +25,7 @@ Released on {{ .Day }}
 ### Minor Changes
 
 {{ range .MinorNotes }}
-* {{ .Description }} [[#{{ .Num }}]({{ .URI }})]
+* {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
 {{ end }}
 {{ end }}
 
@@ -33,7 +33,7 @@ Released on {{ .Day }}
 ### Bug Fixes
 
 {{ range .FixNotes }}
-* {{ .Description }} [[#{{ .Num }}]({{ .URI }})]
+* {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
 {{ end }}
 {{ end }}
 
@@ -41,7 +41,7 @@ Released on {{ .Day }}
 ### Rule Changes
 
 {{ range .RuleNotes }}
-* {{ .Description }} [[#{{ .Num }}]({{ .URI }})]
+* {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
 {{ end }}
 {{ end }}`
 

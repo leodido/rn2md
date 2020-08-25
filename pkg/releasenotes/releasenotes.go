@@ -24,6 +24,8 @@ type ReleaseNote struct {
 	Description string
 	URI         string
 	Num         int
+	Author      string
+	AuthorURL   string
 }
 
 // Client ...
@@ -118,6 +120,8 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 				Description: n,
 				URI:         fmt.Sprintf("%s/%s/%s/pull/%d", defaultGitHubBaseURI, org, repo, num),
 				Num:         num,
+				Author:      p.GetUser().GetLogin(),
+				AuthorURL:   p.GetUser().GetURL(),
 			}
 			releaseNotes = append(releaseNotes, rn)
 		}

@@ -81,7 +81,7 @@ func Print(milestone string, notes []ReleaseNote) (string, error) {
 
 	data := templateData{
 		Milestone:  milestone,
-		Day:        time.Now().Format("2006-02-01"),
+		Day:        time.Now().Format("2006-01-02"),
 		MinorNotes: minors,
 		MajorNotes: majors,
 		FixNotes:   fixes,

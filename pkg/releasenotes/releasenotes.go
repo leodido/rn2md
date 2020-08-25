@@ -120,8 +120,8 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 				Description: n,
 				URI:         fmt.Sprintf("%s/%s/%s/pull/%d", defaultGitHubBaseURI, org, repo, num),
 				Num:         num,
-				Author:      p.GetUser().GetLogin(),
-				AuthorURL:   p.GetUser().GetURL(),
+				Author:      fmt.Sprintf("@%s", p.GetUser().GetLogin()),
+				AuthorURL:   p.GetUser().GetHTMLURL(),
 			}
 			releaseNotes = append(releaseNotes, rn)
 		}

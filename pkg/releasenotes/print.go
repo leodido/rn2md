@@ -43,6 +43,14 @@ Released on {{ .Day }}
 {{ range .RuleNotes }}
 * {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
 {{ end }}
+{{ end }}
+
+{{ if .NoneNotes }}
+### Non user-facing changes
+
+{{ range .NoneNotes }}
+* {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
+{{ end }}
 {{ end }}`
 
 type templateData struct {
@@ -52,6 +60,7 @@ type templateData struct {
 	MinorNotes []ReleaseNote
 	FixNotes   []ReleaseNote
 	RuleNotes  []ReleaseNote
+	NoneNotes  []ReleaseNote
 }
 
 // Print ...
@@ -60,6 +69,7 @@ func Print(milestone string, notes []ReleaseNote) (string, error) {
 	minors := []ReleaseNote{}
 	fixes := []ReleaseNote{}
 	rules := []ReleaseNote{}
+	none := []ReleaseNote{}
 	for _, n := range notes {
 		switch n.Typology {
 		case "fix":
@@ -72,6 +82,9 @@ func Print(milestone string, notes []ReleaseNote) (string, error) {
 			fallthrough
 		case "new":
 			majors = append(majors, n)
+			break
+		case "none":
+			none = append(none, n)
 			break
 		default:
 			minors = append(minors, n)
@@ -86,6 +99,7 @@ func Print(milestone string, notes []ReleaseNote) (string, error) {
 		MajorNotes: majors,
 		FixNotes:   fixes,
 		RuleNotes:  rules,
+		NoneNotes:  none,
 	}
 
 	t := template.New("changes")

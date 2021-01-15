@@ -104,6 +104,16 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 		note := strings.TrimSpace(res[1])
 		if note == "NONE" || note == "none" {
 			c.s.totalNone++
+			rn := ReleaseNote{
+				Typology:    "none",
+				Scope:       "",
+				Description: p.GetTitle(),
+				URI:         fmt.Sprintf("%s/%s/%s/pull/%d", defaultGitHubBaseURI, org, repo, num),
+				Num:         num,
+				Author:      fmt.Sprintf("@%s", p.GetUser().GetLogin()),
+				AuthorURL:   p.GetUser().GetHTMLURL(),
+			}
+			releaseNotes = append(releaseNotes, rn)
 			continue
 		}
 		notes := strings.Split(note, "\n")

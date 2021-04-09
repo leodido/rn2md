@@ -16,6 +16,9 @@ Released on {{ .Day }}
 ### Major Changes
 
 {{ if .MajorNotes }}
+{{ range .BreakingNotes }}
+* {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
+{{ end }}
 {{ range .MajorNotes }}
 * {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
 {{ end }}
@@ -54,17 +57,19 @@ Released on {{ .Day }}
 {{ end }}`
 
 type templateData struct {
-	Milestone  string
-	Day        string
-	MajorNotes []ReleaseNote
-	MinorNotes []ReleaseNote
-	FixNotes   []ReleaseNote
-	RuleNotes  []ReleaseNote
-	NoneNotes  []ReleaseNote
+	Milestone     string
+	Day           string
+	BreakingNotes []ReleaseNote
+	MajorNotes    []ReleaseNote
+	MinorNotes    []ReleaseNote
+	FixNotes      []ReleaseNote
+	RuleNotes     []ReleaseNote
+	NoneNotes     []ReleaseNote
 }
 
 // Print ...
 func Print(milestone string, notes []ReleaseNote) (string, error) {
+	breaking := []ReleaseNote{}
 	majors := []ReleaseNote{}
 	minors := []ReleaseNote{}
 	fixes := []ReleaseNote{}
@@ -79,7 +84,8 @@ func Print(milestone string, notes []ReleaseNote) (string, error) {
 			rules = append(rules, n)
 			break
 		case "BREAKING CHANGE":
-			fallthrough
+			breaking = append(breaking, n)
+			break
 		case "new":
 			majors = append(majors, n)
 			break
@@ -96,6 +102,7 @@ func Print(milestone string, notes []ReleaseNote) (string, error) {
 		Milestone:  milestone,
 		Day:        time.Now().Format("2006-01-02"),
 		MinorNotes: minors,
+		BreakingNotes: breaking,
 		MajorNotes: majors,
 		FixNotes:   fixes,
 		RuleNotes:  rules,

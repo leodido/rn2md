@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
@@ -13,7 +14,6 @@ import (
 type Options struct {
 	Milestone string `validate:"required,semver" name:"milestone"`
 	Branch    string `default:"master" validate:"omitempty,ascii" name:"branch"`
-	Org       string `validate:"required,ascii" name:"organization"`
 	Repo      string `validate:"required,ascii" name:"repository"`
 	Token     string `validate:"omitempty,len=40" name:"token"`
 }
@@ -39,4 +39,12 @@ func (o *Options) Validate() []error {
 		return errArr
 	}
 	return nil
+}
+
+func (o *Options) SplitRepoOrgName() (string, string, error) {
+	names := strings.Split(o.Repo, "/")
+	if len(names) != 2 {
+		return "", "", fmt.Errorf("provided repo has wrong format, expected org/repo, actual: %s", o.Repo)
+	}
+	return names[0], names[1], nil
 }

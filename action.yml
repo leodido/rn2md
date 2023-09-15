@@ -1,0 +1,45 @@
+name: 'rn2md'
+description: 'Generate release notes and stats from release-note blocks found into your project pull requests.'
+
+outputs:
+  path:
+    description: Path for the output file
+    value: ${{ steps.generate.outputs.path }}
+
+inputs:
+  token:
+    description: A GitHub personal API token to perform authenticated requests
+    required: false
+    default: ${{ github.token }}
+  milestone:
+    description: The milestone you want to filter by the pull requests
+    required: true
+  repo:
+    description: The github repository name
+    required: false
+    default: ${{ github.repository }}
+  branch:
+    description: The target branch you want to filter by the pull requests
+    required: false
+    default: ${{ github.event.repository.default_branch }}
+  output:
+    description: Target file to be generated
+    required: false
+    default: ${{ github.workspace }}/release_body.md
+
+runs:
+  using: "composite"
+  steps:
+    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
+      shell: bash
+  
+    - uses: actions/setup-go@v1
+      with:
+        go-version: 1.21
+        
+    - id: generate
+      run: |
+        go build .
+        ./rn2md -b ${{ inputs.branch }} -r ${{ inputs.repo }} -m ${{ inputs.milestone }} -t ${{ inputs.token }} &> ${{ inputs.output }}
+        PATH=$(${{ inputs.output }})
+        echo "path=${PATH}" >> $GITHUB_OUTPUT

@@ -37,7 +37,7 @@ To automatically generate release notes markdown for your project milestone, you
 
 ```yaml
   - name: rn2md
-    uses: leodido/rn2md@latest
+    uses: leodido/rn2md@master
     with:
       # The milestone you want to filter by the pull requests. Required.
       milestone: 0.21.0
@@ -47,7 +47,7 @@ To automatically generate release notes markdown for your project milestone, you
       repo: myorg/myrepo 
       # Target branch to filter by the pull requests. Defaults to ${{ github.event.repository.default_branch }}.
       branch: main
-      # Target file to be generated. Defaults to ${{ github.workspace }}/release_body.md
+      # Target file to be generated, relative to github workspace. Defaults to release_body.md
       output: out.md
 ```
 

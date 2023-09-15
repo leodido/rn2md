@@ -2,6 +2,10 @@ package releasenotes
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/olekukonko/tablewriter"
+	"os"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -67,14 +71,13 @@ type templateData struct {
 	NoneNotes     []ReleaseNote
 }
 
-// Print ...
-func Print(milestone string, notes []ReleaseNote) (string, error) {
-	breaking := []ReleaseNote{}
-	majors := []ReleaseNote{}
-	minors := []ReleaseNote{}
-	fixes := []ReleaseNote{}
-	rules := []ReleaseNote{}
-	none := []ReleaseNote{}
+func (notes ReleaseNotes) Print(milestone string) error {
+	var breaking []ReleaseNote
+	var majors []ReleaseNote
+	var minors []ReleaseNote
+	var fixes []ReleaseNote
+	var rules []ReleaseNote
+	var none []ReleaseNote
 	for _, n := range notes {
 		switch n.Typology {
 		case "fix":
@@ -99,29 +102,46 @@ func Print(milestone string, notes []ReleaseNote) (string, error) {
 	}
 
 	data := templateData{
-		Milestone:  milestone,
-		Day:        time.Now().Format("2006-01-02"),
-		MinorNotes: minors,
+		Milestone:     milestone,
+		Day:           time.Now().Format("2006-01-02"),
+		MinorNotes:    minors,
 		BreakingNotes: breaking,
-		MajorNotes: majors,
-		FixNotes:   fixes,
-		RuleNotes:  rules,
-		NoneNotes:  none,
+		MajorNotes:    majors,
+		FixNotes:      fixes,
+		RuleNotes:     rules,
+		NoneNotes:     none,
 	}
 
 	t := template.New("changes")
 	res, err := t.Parse(templ)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	b := bytes.NewBuffer(nil)
 	err = res.Execute(b, data)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	result := strings.ReplaceAll(b.String(), "\n\n", "\n")
+	fmt.Println(result)
+	return nil
+}
 
-	return result, nil
+func (s *Statistics) Print() error {
+	fmt.Println("### Statistics")
+	fmt.Println("")
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Merged PRs", "Number"})
+	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+	table.SetCenterSeparator("|")
+
+	table.Append([]string{"Not user-facing", strconv.FormatInt(s.totalNone, 10)})
+	table.Append([]string{"Release note", strconv.FormatInt(s.total-s.totalNone, 10)})
+	table.Append([]string{"Total", strconv.FormatInt(s.total, 10)})
+
+	table.Render() // Send output
+	return nil
 }

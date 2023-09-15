@@ -2,6 +2,7 @@ package releasenotes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -28,10 +29,11 @@ type ReleaseNote struct {
 	AuthorURL   string
 }
 
+type ReleaseNotes []ReleaseNote
+
 // Client ...
 type Client struct {
 	c *github.Client
-	s *statistics
 }
 
 // NewClient ...
@@ -49,16 +51,11 @@ func NewClient(token string) *Client {
 
 	return &Client{
 		c: client,
-		s: &statistics{
-			total:     0,
-			totalNone: 0,
-			authors:   map[string]int{},
-		},
 	}
 }
 
 // Get returns the list of release notes found for the given parameters.
-func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error) {
+func (c *Client) Get(org, repo, branch, milestone string) (ReleaseNotes, *Statistics, error) {
 	ctx := context.Background()
 	listingOpts := &github.PullRequestListOptions{
 		State:     "closed",
@@ -70,22 +67,29 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 		},
 	}
 	prs, _, err := c.c.PullRequests.List(ctx, org, repo, listingOpts)
-	if _, ok := err.(*github.RateLimitError); ok {
-		return nil, fmt.Errorf("hit rate limiting")
+	var rateLimitErr *github.RateLimitError
+	if errors.As(err, &rateLimitErr) {
+		return nil, nil, fmt.Errorf("hit rate limiting")
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	releaseNotes := []ReleaseNote{}
+	var releaseNotes []ReleaseNote
+	s := &Statistics{
+		total:     0,
+		totalNone: 0,
+		authors:   make(map[string]int64),
+	}
 	for _, p := range prs {
 		num := p.GetNumber()
 		isMerged, _, err := c.c.PullRequests.IsMerged(ctx, org, repo, num)
-		if _, ok := err.(*github.RateLimitError); ok {
-			return nil, fmt.Errorf("hit rate limiting")
+		var rateLimitError *github.RateLimitError
+		if errors.As(err, &rateLimitError) {
+			return nil, nil, fmt.Errorf("hit rate limiting")
 		}
 		if err != nil {
-			return nil, fmt.Errorf("error detecting if pr %d is merged or not", num)
+			return nil, nil, fmt.Errorf("error detecting if pr %d is merged or not", num)
 		}
 		if !isMerged {
 			// It means PR has been closed but not merged in
@@ -94,8 +98,8 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 		if p.GetMilestone().GetTitle() != milestone {
 			continue
 		}
-		c.s.total++
-		c.s.authors[p.GetUser().GetLogin()] = c.s.authors[p.GetUser().GetLogin()] + 1
+		s.total++
+		s.authors[p.GetUser().GetLogin()] = s.authors[p.GetUser().GetLogin()] + 1
 
 		res := releaseNoteRegexp.FindStringSubmatch(p.GetBody())
 		if len(res) < 1 {
@@ -103,7 +107,7 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 		}
 		note := strings.TrimSpace(res[1])
 		if note == "NONE" || note == "none" {
-			c.s.totalNone++
+			s.totalNone++
 			rn := ReleaseNote{
 				Typology:    "none",
 				Scope:       "",
@@ -121,7 +125,7 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 			n = strings.Trim(n, "\r")
 			matches := typologyRegexp.FindStringSubmatch(n)
 			if len(matches) < 5 {
-				return nil, fmt.Errorf("error extracting type from release note, pr: %d", num)
+				return nil, nil, fmt.Errorf("error extracting type from release note, pr: %d", num)
 			}
 
 			rn := ReleaseNote{
@@ -137,20 +141,5 @@ func (c *Client) Get(org, repo, branch, milestone string) ([]ReleaseNote, error)
 		}
 	}
 
-	return releaseNotes, nil
-}
-
-// TotalNone ...
-func (c *Client) TotalNone() int {
-	return c.s.totalNone
-}
-
-// TotalWithNotes ...
-func (c *Client) TotalWithNotes() int {
-	return c.s.total - c.s.totalNone
-}
-
-// TotalByAuthors returns the number of PRs by author username.
-func (c *Client) TotalByAuthors() map[string]int {
-	return c.s.authors
+	return releaseNotes, s, nil
 }

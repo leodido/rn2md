@@ -1,0 +1,18 @@
+project_name: rn2md
+builds:
+  - id: "rn2md"
+    goos:
+    - linux
+    goarch:
+    - amd64
+    - arm64
+    main: .
+    flags:
+      - -buildmode=pie
+    env:
+      - CGO_ENABLED=0
+    binary: rn2md
+
+release:
+  github:
+  prerelease: auto

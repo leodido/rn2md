@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/leodido/rn2md/pkg/releasenotes"
 	logger "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -26,15 +24,20 @@ var program = &cobra.Command{
 	},
 	Run: func(c *cobra.Command, args []string) {
 		client := releasenotes.NewClient(opts.Token)
-		notes, err := client.Get(opts.Org, opts.Repo, opts.Branch, opts.Milestone)
+		notes, stats, err := client.Get(opts.Org, opts.Repo, opts.Branch, opts.Milestone)
 		if err != nil {
 			logger.WithError(err).Fatal("error retrieving PRs")
 		}
-		output, err := releasenotes.Print(opts.Milestone, notes)
+		err = notes.Print(opts.Milestone)
 		if err != nil {
 			logger.WithError(err).Fatal("error printing out release notes")
 		}
-		fmt.Println(output)
+
+		// Print statistics
+		err = stats.Print()
+		if err != nil {
+			logger.WithError(err).Fatal("error printing out release stats")
+		}
 	},
 }
 

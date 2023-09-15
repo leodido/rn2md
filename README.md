@@ -32,10 +32,6 @@ Flags:
   -t, --token string       a GitHub personal API token to perform authenticated requests
 ```
 
-## TODO
-
-- [ ] gen markdown table for statistics
-
 ---
 
 [![Analytics](https://ga-beacon.appspot.com/UA-49657176-1/rn2md?flat)](https://github.com/igrigorik/ga-beacon)

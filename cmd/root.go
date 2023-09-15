@@ -24,7 +24,11 @@ var program = &cobra.Command{
 	},
 	Run: func(c *cobra.Command, args []string) {
 		client := releasenotes.NewClient(opts.Token)
-		notes, stats, err := client.Get(opts.Org, opts.Repo, opts.Branch, opts.Milestone)
+		org, repo, err := opts.SplitRepoOrgName()
+		if err != nil {
+			logger.WithError(err).Fatal("error retrieving repo org and name")
+		}
+		notes, stats, err := client.Get(org, repo, opts.Branch, opts.Milestone)
 		if err != nil {
 			logger.WithError(err).Fatal("error retrieving PRs")
 		}
@@ -47,8 +51,7 @@ func init() {
 	// Setup flags before the command is initialized
 	flags := program.PersistentFlags()
 	flags.StringVarP(&opts.Milestone, "milestone", "m", opts.Milestone, "the milestone you want to filter by the pull requests")
-	flags.StringVarP(&opts.Org, "org", "o", opts.Org, "the github organization")
-	flags.StringVarP(&opts.Repo, "repo", "r", opts.Repo, "the github repository name")
+	flags.StringVarP(&opts.Repo, "repo", "r", opts.Repo, "the full github repository name (org/repo)")
 	flags.StringVarP(&opts.Branch, "branch", "b", opts.Branch, "the target branch you want to filter by the pull requests")
 	flags.StringVarP(&opts.Token, "token", "t", opts.Token, "a GitHub personal API token to perform authenticated requests")
 }

@@ -80,24 +80,18 @@ func (notes ReleaseNotes) Print(milestone string) error {
 	var none []ReleaseNote
 	for _, n := range notes {
 		switch n.Typology {
-		case "fix":
-			fixes = append(fixes, n)
-			break
-		case "rule":
-			rules = append(rules, n)
-			break
 		case "BREAKING CHANGE":
 			breaking = append(breaking, n)
-			break
-		case "new":
+		case "fix":
+			fixes = append(fixes, n)
+		case "rule":
+			rules = append(rules, n)
+		case "new", "feat":
 			majors = append(majors, n)
-			break
 		case "none":
 			none = append(none, n)
-			break
 		default:
 			minors = append(minors, n)
-			break
 		}
 	}
 
@@ -138,8 +132,8 @@ func (s *Statistics) Print() error {
 	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 	table.SetCenterSeparator("|")
 
-	table.Append([]string{"Not user-facing", strconv.FormatInt(s.totalNone, 10)})
-	table.Append([]string{"Release note", strconv.FormatInt(s.total-s.totalNone, 10)})
+	table.Append([]string{"Not user-facing", strconv.FormatInt(s.nonFacing, 10)})
+	table.Append([]string{"Release note", strconv.FormatInt(s.total-s.nonFacing, 10)})
 	table.Append([]string{"Total", strconv.FormatInt(s.total, 10)})
 
 	table.Render() // Send output

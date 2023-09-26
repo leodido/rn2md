@@ -13,7 +13,7 @@ import (
 
 var (
 	releaseNoteRegexp = regexp.MustCompile("(?s)```release-note(.+?)```")
-	typologyRegexp    = regexp.MustCompile(`(?m)(.+?)(\((.+)\))?: ?(.*)`)
+	typologyRegexp    = regexp.MustCompile(`(?m)(.+?)(\((.+)\))?(!)?: ?(.*)`)
 )
 
 const defaultGitHubBaseURI = "https://github.com"
@@ -78,7 +78,7 @@ func (c *Client) Get(org, repo, branch, milestone string) (ReleaseNotes, *Statis
 	var releaseNotes []ReleaseNote
 	s := &Statistics{
 		total:     0,
-		totalNone: 0,
+		nonFacing: 0,
 		authors:   make(map[string]int64),
 	}
 	for _, p := range prs {
@@ -106,8 +106,8 @@ func (c *Client) Get(org, repo, branch, milestone string) (ReleaseNotes, *Statis
 			continue
 		}
 		note := strings.TrimSpace(res[1])
-		if note == "NONE" || note == "none" {
-			s.totalNone++
+		if strings.EqualFold(note, "NONE") {
+			s.nonFacing++
 			rn := ReleaseNote{
 				Typology:    "none",
 				Scope:       "",
@@ -120,11 +120,12 @@ func (c *Client) Get(org, repo, branch, milestone string) (ReleaseNotes, *Statis
 			releaseNotes = append(releaseNotes, rn)
 			continue
 		}
+
 		notes := strings.Split(note, "\n")
 		for _, n := range notes {
 			n = strings.Trim(n, "\r")
 			matches := typologyRegexp.FindStringSubmatch(n)
-			if len(matches) < 5 {
+			if len(matches) < 6 {
 				return nil, nil, fmt.Errorf("error extracting type from release note, pr: %d", num)
 			}
 
@@ -136,6 +137,9 @@ func (c *Client) Get(org, repo, branch, milestone string) (ReleaseNotes, *Statis
 				Num:         num,
 				Author:      fmt.Sprintf("@%s", p.GetUser().GetLogin()),
 				AuthorURL:   p.GetUser().GetHTMLURL(),
+			}
+			if matches[4] == "!" {
+				rn.Typology = "BREAKING CHANGE"
 			}
 			releaseNotes = append(releaseNotes, rn)
 		}

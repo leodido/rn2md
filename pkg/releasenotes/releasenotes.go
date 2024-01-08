@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/gofri/go-github-ratelimit/github_ratelimit"
 	"github.com/google/go-github/v28/github"
 	"golang.org/x/oauth2"
 )
@@ -38,8 +41,7 @@ type Client struct {
 
 // NewClient ...
 func NewClient(token string) *Client {
-	client := github.NewClient(nil)
-
+	var client *github.Client
 	// Eventually create an authenticated client
 	if token != "" {
 		ts := oauth2.StaticTokenSource(
@@ -47,6 +49,13 @@ func NewClient(token string) *Client {
 		)
 		tc := oauth2.NewClient(context.Background(), ts)
 		client = github.NewClient(tc)
+	} else {
+		// Force use a rate limited client. It will be slow but should overcome rate limiting issues.
+		rateLimiter, err := github_ratelimit.NewRateLimitWaiterClient(nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		client = github.NewClient(rateLimiter)
 	}
 
 	return &Client{
@@ -63,16 +72,38 @@ func (c *Client) Get(org, repo, branch, milestone string) (ReleaseNotes, *Statis
 		Sort:      "updated",
 		Direction: "desc",
 		ListOptions: github.ListOptions{
-			PerPage: 1000,
+			// https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#list-pull-requests
+			// per_page integer
+			//
+			// The number of results per page (max 100). For more information, see "Using pagination in the REST API."
+			// Default: 30
+			PerPage: 100,
 		},
 	}
-	prs, _, err := c.c.PullRequests.List(ctx, org, repo, listingOpts)
-	var rateLimitErr *github.RateLimitError
-	if errors.As(err, &rateLimitErr) {
-		return nil, nil, fmt.Errorf("hit rate limiting")
-	}
-	if err != nil {
-		return nil, nil, err
+
+	// https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#list-pull-requests
+	// page integer
+	//
+	// The page number of the results to fetch. For more information, see "Using pagination in the REST API."
+	// Default: 1
+	page := 1
+	prs := make([]*github.PullRequest, 0)
+	for {
+		listingOpts.Page = page
+		pagedPrs, _, err := c.c.PullRequests.List(ctx, org, repo, listingOpts)
+		var rateLimitErr *github.RateLimitError
+		if errors.As(err, &rateLimitErr) {
+			return nil, nil, fmt.Errorf("hit rate limiting")
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		prs = append(prs, pagedPrs...)
+		if len(pagedPrs) < listingOpts.PerPage {
+			// We collected all prs!
+			break
+		}
+		page++
 	}
 
 	var releaseNotes []ReleaseNote
@@ -83,16 +114,7 @@ func (c *Client) Get(org, repo, branch, milestone string) (ReleaseNotes, *Statis
 	}
 	for _, p := range prs {
 		num := p.GetNumber()
-		isMerged, _, err := c.c.PullRequests.IsMerged(ctx, org, repo, num)
-		var rateLimitError *github.RateLimitError
-		if errors.As(err, &rateLimitError) {
-			return nil, nil, fmt.Errorf("hit rate limiting")
-		}
-		if err != nil {
-			return nil, nil, fmt.Errorf("error detecting if pr %d is merged or not", num)
-		}
-		if !isMerged {
-			// It means PR has been closed but not merged in
+		if p.GetMergedAt().Equal(time.Time{}) {
 			continue
 		}
 		if p.GetMilestone().GetTitle() != milestone {

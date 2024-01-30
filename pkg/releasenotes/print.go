@@ -16,13 +16,17 @@ const templ = `## v{{ .Milestone }}
 
 Released on {{ .Day }}
 
+{{ if .BreakingNotes }}
+### Breaking Changes :warning:
 
-### Major Changes
-
-{{ if .MajorNotes }}
 {{ range .BreakingNotes }}
 * {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
 {{ end }}
+{{ end }}
+
+{{ if .MajorNotes }}
+### Major Changes
+
 {{ range .MajorNotes }}
 * {{ .Description }} [[#{{ .Num }}]({{ .URI }})] - [{{ .Author }}]({{ .AuthorURL }})
 {{ end }}
